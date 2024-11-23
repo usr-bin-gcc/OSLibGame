@@ -1,0 +1,188 @@
+/******************************************************************************
+
+File        : main.c
+
+Date        : Saturday 23rd November 2024
+
+Author      : Gavin Cawley
+
+Description : Sketching out some basic elements of a Desktop game using OSLib
+
+History     : 23/11/2024 - v1.00 
+
+******************************************************************************/
+          
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "oslib/wimp.h"
+#include "oslib/os.h"
+
+FILE *logfile;
+
+wimp_window* createWindow()
+{           
+   wimp_window* window = (wimp_window*)malloc(sizeof(wimp_window));
+
+   window->visible.x0   = 0;
+   window->visible.y0   = 0;
+   window->visible.x1   = 640;
+   window->visible.y1   = 512;
+   window->xscroll      = 0;
+   window->yscroll      = 0;
+   window->next         = wimp_TOP;
+   window->flags        = wimp_WINDOW_MOVEABLE  
+                        | wimp_WINDOW_BACK_ICON 
+                        | wimp_WINDOW_CLOSE_ICON 
+                        | wimp_WINDOW_TITLE_ICON 
+                        | wimp_WINDOW_HSCROLL 
+                        | wimp_WINDOW_VSCROLL 
+                        | wimp_WINDOW_TOGGLE_ICON 
+                        | wimp_WINDOW_SIZE_ICON 
+                        | wimp_WINDOW_NEW_FORMAT;
+   window->title_fg     = wimp_COLOUR_BLACK;
+   window->title_bg     = wimp_COLOUR_LIGHT_GREY;
+   window->work_fg      = wimp_COLOUR_BLACK;
+   window->work_bg      = wimp_COLOUR_LIGHT_GREY; 
+   window->scroll_outer = wimp_COLOUR_MID_LIGHT_GREY;
+   window->scroll_inner = wimp_COLOUR_VERY_LIGHT_GREY;
+   window->extent.x0    = 0;
+   window->extent.y0    = 0;
+   window->extent.x1    = 640;
+   window->extent.y1    = 512;
+   window->title_flags  = wimp_ICON_TEXT 
+                        | wimp_ICON_HCENTRED 
+                        | wimp_ICON_VCENTRED;
+   window->work_flags   = wimp_BUTTON_CLICK << wimp_ICON_BUTTON_TYPE_SHIFT;
+   window->sprite_area  = 0;
+   window->xmin         = 0;
+   window->ymin         = 0;
+   window->icon_count   = 0;
+
+   strncpy(window->title_data.text, "OSLibGame", 12);              
+
+   return window;
+}
+
+wimp_block* createWimpBlock(wimp_window* window)
+{
+   wimp_block* block = (wimp_block*)malloc(sizeof(wimp_block));
+                        
+   block->open.w       = wimp_create_window(window);
+   block->open.visible = window->visible;
+   block->open.xscroll = window->xscroll;
+   block->open.yscroll = window->yscroll;
+   block->open.next    = window->next;         
+
+   return block;
+}
+
+osbool update(wimp_event_no event,wimp_block* block)
+{
+   switch(event)
+   {
+      case wimp_REDRAW_WINDOW_REQUEST:
+      {
+         fprintf(logfile, "REDRAW_WINDOW_REQUEST received.\n"); 
+         fflush(logfile);
+
+         wimp_draw draw;
+         draw.w = block->redraw.w;
+         draw.box = block->redraw.box;
+
+         int more;
+
+         xwimp_redraw_window(&draw, &more);
+
+         while (more)
+         {
+            xwimp_get_rectangle(&draw, &more);
+         }
+     
+         break;
+      }
+      case wimp_OPEN_WINDOW_REQUEST:
+      {
+         fprintf(logfile, "OPEN_WINDOW_REQUEST received.\n");                   
+         fflush(logfile);
+
+         wimp_open_window(&block->open);
+
+         break;
+      }
+      case wimp_CLOSE_WINDOW_REQUEST:
+      {
+         fprintf(logfile, "CLOSE_WINDOW_REQUEST received.\n");
+         fflush(logfile);
+
+         wimp_close_window(block->close.w);
+
+         return TRUE;
+      }
+      case wimp_USER_MESSAGE:
+      {
+      }
+      case wimp_USER_MESSAGE_RECORDED:
+      {
+         if(block->message.action == message_QUIT)
+         {
+            fprintf(logfile, "QUIT message received.\n");
+            fflush(logfile);
+
+            return TRUE;
+         }
+
+         break;
+      }
+   }
+
+   return FALSE;
+}
+
+int main()
+{
+   logfile = fopen("logfile", "w");
+        
+   if (logfile == NULL)
+   { 
+      perror("Error opening log file");
+      
+      return EXIT_FAILURE;
+   } 
+  
+   fprintf(logfile, "Starting application\n");
+
+   wimp_initialise(wimp_VERSION_RO3,"Example App",NULL,NULL); 
+  
+   wimp_window *window = createWindow();
+   wimp_block  *block  = createWimpBlock(window);
+           
+   os_error *err = xwimp_open_window(&block->open);
+                         
+   if (err != NULL)
+   {
+      fprintf(logfile, "msg = '%s'\n", err->errmess);
+      fflush(logfile);
+   }
+
+   osbool quit = FALSE;
+
+   while(!quit)
+   {
+      wimp_event_no event = wimp_poll(0, block, NULL);
+                
+      quit = update(event, block);
+   }
+
+   free(window);
+   free(block);
+   
+   wimp_close_down(0); 
+
+   fclose(logfile);
+        
+   return EXIT_SUCCESS;
+}                      
+
+/****************************************************************************/
