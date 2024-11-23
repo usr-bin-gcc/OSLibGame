@@ -27,6 +27,63 @@ FILE *logfile;
 
 /*****************************************************************************
 *                                                                            *
+*                              SCREEN MODE INFO                              *
+*                                                                            *
+*****************************************************************************/
+
+typedef union
+{        
+   int numbers[14];
+
+   struct
+   {    
+      int modeFlags,
+          scrRCol,
+          scrBRow,
+          nColour,
+          xEigFactor,
+          yEigFactor,
+          lineLength,  
+          screenSize,
+          yShiftSize,
+          log2bpp,
+          log2bpc,
+          xWindLimit,
+          yWindLimit,
+          minScreenBanks;
+   }
+   info;
+}
+ModeInfo;                                 
+
+ModeInfo modeInfo;
+         
+void updateModeInfo()
+{                                      
+   for (int i = 0; i < 15; i++)
+   {
+      modeInfo.numbers[i] = i;
+   }
+
+   modeInfo.numbers[14] = -1;
+
+   os_error *e = xos_read_vdu_variables((os_vdu_var_list*)modeInfo.numbers, 
+                                        modeInfo.numbers);
+
+   fprintf(logfile, "VDU variables:\n"
+      "   xEigFactor = %d\n" 
+      "   yEigFactor = %d\n"
+      "   xWindLimit = %d\n"
+      "   yWindLimit = %d\n", 
+      modeInfo.info.xEigFactor, 
+      modeInfo.info.yEigFactor,
+      modeInfo.info.xWindLimit,
+      modeInfo.info.yWindLimit);
+   fflush(logfile);
+}
+
+/*****************************************************************************
+*                                                                            *
 *                                   SPRITES                                  *
 *                                                                            *
 *****************************************************************************/
@@ -38,7 +95,6 @@ osspriteop_header *invader1, *invader2;
 os_factors factors;
 
 osspriteop_trans_tab *transTab;
-
 
 osspriteop_area* loadSpriteFile(const char *filename)
 {                                                       
@@ -104,11 +160,11 @@ osspriteop_area* loadSpriteFile(const char *filename)
          "   errnum = %d: message = '%s'\n", e->errnum, e->errmess);
       fflush(logfile);
    }
-
+                        
    // set up factors and translation table
 
-   factors.xmul = 1;
-   factors.ymul = 2;
+   factors.xmul = 1<<(modeInfo.info.xEigFactor-1);
+   factors.ymul = 1<<(modeInfo.info.yEigFactor);
    factors.xdiv = 1;
    factors.ydiv = 1;         
 
@@ -328,6 +384,8 @@ int main()
 
    wimp_initialise(wimp_VERSION_RO3,"Example App",NULL,NULL); 
                                       
+   updateModeInfo();
+
    area = loadSpriteFile("sprites");
 
    wimp_window *window = createWindow();
