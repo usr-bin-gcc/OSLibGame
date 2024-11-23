@@ -6,7 +6,8 @@ Date        : Saturday 23rd November 2024
 
 Author      : Gavin Cawley
 
-Description : Sketching out some basic elements of a Desktop game using OSLib
+Description : Sketching out some basic elements of a simple Desktop game 
+              implemented using OSLib.
 
 History     : 23/11/2024 - v1.00 
 
@@ -17,9 +18,154 @@ History     : 23/11/2024 - v1.00
 #include <string.h>
 
 #include "oslib/wimp.h"
-#include "oslib/os.h"
+#include "oslib/os.h"        
+#include "oslib/osfile.h"
+#include "oslib/osspriteop.h"                    
+#include "oslib/colourtrans.h"
 
-FILE *logfile;
+FILE *logfile;               
+
+/*****************************************************************************
+*                                                                            *
+*                                   SPRITES                                  *
+*                                                                            *
+*****************************************************************************/
+
+osspriteop_area *area;
+
+osspriteop_header *invader1, *invader2;
+
+os_factors factors;
+
+osspriteop_trans_tab *transTab;
+
+
+osspriteop_area* loadSpriteFile(const char *filename)
+{                                                       
+   int size;
+
+   bits type;
+   
+   fprintf(logfile, "loading sprites...\n"); 
+   fflush(logfile);
+   
+   osfile_read_stamped_no_path(filename, 
+                               NULL, 
+                               NULL, 
+                               &size, 
+                               NULL, 
+                               &type);
+   
+   fprintf(logfile, "sprite file size = %d\n", size);
+   fflush(logfile);
+
+   size += sizeof(int);
+
+   osspriteop_area *area = malloc(size);
+
+   area->size  = size;
+   area->first = 16;
+
+   os_error *e = xosspriteop_load_sprite_file(osspriteop_USER_AREA,
+                                                  area,
+                                                  filename);
+
+   if (e != NULL)
+   {
+      fprintf(logfile, "xosspriteop_load_sprite_file failed\n"
+         "   errnum = %d: message = '%s'\n", e->errnum, e->errmess);
+         fflush(logfile);
+      free(area);
+   }          
+
+   // determine more efficient sprite pointer ids                               
+   
+   e = xosspriteop_select_sprite(osspriteop_USER_AREA, 
+                                     area, 
+                                     (osspriteop_id)"invader1",
+                                     &invader1);
+
+
+   if (e != NULL)
+   {
+      fprintf(logfile, "selecting invader1 failed\n"
+         "   errnum = %d: message = '%s'\n", e->errnum, e->errmess);
+      fflush(logfile);
+   }
+    
+   e = xosspriteop_select_sprite(osspriteop_USER_AREA, 
+                                 area, 
+                                 (osspriteop_id)"invader2",
+                                 &invader2);
+
+   if (e != NULL)
+   {
+      fprintf(logfile, "selecting invader2 failed\n"
+         "   errnum = %d: message = '%s'\n", e->errnum, e->errmess);
+      fflush(logfile);
+   }
+
+   // set up factors and translation table
+
+   factors.xmul = 1;
+   factors.ymul = 2;
+   factors.xdiv = 1;
+   factors.ydiv = 1;         
+
+   e = xcolourtrans_generate_table_for_sprite(area,  
+                                       (osspriteop_id)"invader1",    
+                                       (os_mode)-1,   
+                                       (os_palette*)-1,    
+                                       NULL,
+                                       colourtrans_CURRENT_IF_ABSENT |
+                                       colourtrans_RETURN_WIDE_ENTRIES,
+                                       NULL,
+                                       NULL,
+                                       &size);
+
+   if (e != NULL)
+   {
+      fprintf(logfile, "xcolourtrans_generate_table #1 failed\n"
+         "   errnum = %d: message = '%s'\n", e->errnum, e->errmess);
+      fflush(logfile);
+   }
+
+   fprintf(logfile, "colourtrans table size = %d\n", size);
+   fflush(logfile); 
+
+   transTab = malloc(size);
+
+   e = xcolourtrans_generate_table_for_sprite(area, 
+                                    (osspriteop_id)"invader1",   
+                                    (os_mode)-1,   
+                                    (os_palette*)-1,   
+                                    transTab,
+                                    colourtrans_CURRENT_IF_ABSENT |
+                                    colourtrans_RETURN_WIDE_ENTRIES,
+                                    NULL,
+                                    NULL,
+                                    &size);
+
+   if (e != NULL)
+   {
+      fprintf(logfile, "xcolourtrans_generate_table #2 failed\n"
+         "   errnum = %d: message = '%s'\n", e->errnum, e->errmess);
+      fflush(logfile);
+   }
+   
+   // all done
+
+   fprintf(logfile, "finished loading sprites\n");
+   fflush(logfile);
+   
+   return area;
+}
+
+/*****************************************************************************
+*                                                                            *
+*                                 GAME WINDOW                                *
+*                                                                            *
+*****************************************************************************/
 
 wimp_window* createWindow()
 {           
@@ -43,8 +189,8 @@ wimp_window* createWindow()
                         | wimp_WINDOW_NEW_FORMAT;
    window->title_fg     = wimp_COLOUR_BLACK;
    window->title_bg     = wimp_COLOUR_LIGHT_GREY;
-   window->work_fg      = wimp_COLOUR_BLACK;
-   window->work_bg      = wimp_COLOUR_LIGHT_GREY; 
+   window->work_fg      = wimp_COLOUR_WHITE;
+   window->work_bg      = wimp_COLOUR_BLACK; 
    window->scroll_outer = wimp_COLOUR_MID_LIGHT_GREY;
    window->scroll_inner = wimp_COLOUR_VERY_LIGHT_GREY;
    window->extent.x0    = 0;
@@ -78,7 +224,45 @@ wimp_block* createWimpBlock(wimp_window* window)
    return block;
 }
 
-osbool update(wimp_event_no event,wimp_block* block)
+void redrawWindow(wimp_block *block)
+{
+   wimp_draw draw;
+   
+   draw.w   = block->redraw.w;
+   draw.box = block->redraw.box;
+
+   int more;
+
+   xwimp_redraw_window(&draw, &more);
+
+   while (more)
+   {
+      int x = draw.box.x0 - draw.xscroll;
+      int y = draw.box.y1 - draw.yscroll; 
+
+
+      os_error *e = xosspriteop_put_sprite_scaled(osspriteop_NAME,
+                                                  area,
+                                                  (osspriteop_id)"invader1",
+                                                  x+320,
+                                                  y+256,
+                                                  os_ACTION_OVERWRITE |
+                                                  osspriteop_GIVEN_WIDE_ENTRIES | 0x8,
+                                                  &factors,
+                                                  transTab);
+
+      if (e != NULL)
+      {
+         fprintf(logfile, "xosspriteop_put_sprite_scaled failed\n"
+            "   errnum = %d: message = '%s'\n", e->errnum, e->errmess);
+         fflush(logfile);
+      }
+
+      xwimp_get_rectangle(&draw, &more);
+   }  
+}
+
+osbool update(wimp_event_no event, wimp_block* block)
 {
    switch(event)
    {
@@ -86,20 +270,9 @@ osbool update(wimp_event_no event,wimp_block* block)
       {
          fprintf(logfile, "REDRAW_WINDOW_REQUEST received.\n"); 
          fflush(logfile);
+                
+         redrawWindow(block);
 
-         wimp_draw draw;
-         draw.w = block->redraw.w;
-         draw.box = block->redraw.box;
-
-         int more;
-
-         xwimp_redraw_window(&draw, &more);
-
-         while (more)
-         {
-            xwimp_get_rectangle(&draw, &more);
-         }
-     
          break;
       }
       case wimp_OPEN_WINDOW_REQUEST:
@@ -154,7 +327,9 @@ int main()
    fprintf(logfile, "Starting application\n");
 
    wimp_initialise(wimp_VERSION_RO3,"Example App",NULL,NULL); 
-  
+                                      
+   area = loadSpriteFile("sprites");
+
    wimp_window *window = createWindow();
    wimp_block  *block  = createWimpBlock(window);
            
