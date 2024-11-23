@@ -1,0 +1,4 @@
+Set <OSLibGame$Dir>  <Obey$Dir>
+Set <OSLibGame$Path> <Obey$Dir>.
+Iconsprites <Obey$Dir>.!Sprites
+
