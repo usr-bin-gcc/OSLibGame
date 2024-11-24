@@ -2,14 +2,15 @@
 
 File        : main.c
 
-Date        : Saturday 23rd November 2024
+Date        : Sunday 24th November 2024
 
 Author      : Gavin Cawley
 
 Description : Sketching out some basic elements of a simple Desktop game 
               implemented using OSLib.
 
-History     : 23/11/2024 - v1.00 
+History     : 23/11/2024 - v1.00
+              24/11/2024 - v1.10 Added animation using a timer 
 
 ******************************************************************************/
           
