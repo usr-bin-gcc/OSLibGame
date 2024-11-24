@@ -371,7 +371,7 @@ osbool update(wimp_event_no event, wimp_block* block)
 
 int main()
 {
-   logfile = fopen("logfile", "w");
+   logfile = fopen("<OSLibGame$Dir>.logfile", "w");
         
    if (logfile == NULL)
    { 
@@ -382,11 +382,11 @@ int main()
   
    fprintf(logfile, "Starting application\n");
 
-   wimp_initialise(wimp_VERSION_RO3,"Example App",NULL,NULL); 
+   wimp_initialise(wimp_VERSION_RO3,"OSLibGame",NULL,NULL); 
                                       
    updateModeInfo();
 
-   area = loadSpriteFile("sprites");
+   area = loadSpriteFile("<OSLibGame$Dir>.sprites");
 
    wimp_window *window = createWindow();
    wimp_block  *block  = createWimpBlock(window);

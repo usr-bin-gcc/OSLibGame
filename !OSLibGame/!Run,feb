@@ -1,5 +1,5 @@
 
-set OSLibGameBug$Dir <Obey$Dir>
+set OSLibGame$Dir <Obey$Dir>
 set OSLibGame$Path <Obey$Dir>.
 
 IconSprites <Obey$Dir>.!Sprites
@@ -11,4 +11,4 @@ RMEnsure ColourTrans 0.52 Error You need ColourTrans 0.52 or later
 |
 WimpSlot -min 100k -max 200k
 WimpSlot -min 100k
-Run <OSLibGameBug$Dir>.application
+Run <OSLibGame$Dir>.application

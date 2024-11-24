@@ -6,33 +6,7 @@ VDU variables:
    yWindLimit = 963
 loading sprites...
 sprite file size = 1460
-colourtrans table size = 16
+colourtrans table size = 64
 finished loading sprites
 REDRAW_WINDOW_REQUEST received.
-OPEN_WINDOW_REQUEST received.
-OPEN_WINDOW_REQUEST received.
-OPEN_WINDOW_REQUEST received.
-OPEN_WINDOW_REQUEST received.
-OPEN_WINDOW_REQUEST received.
-OPEN_WINDOW_REQUEST received.
-OPEN_WINDOW_REQUEST received.
-OPEN_WINDOW_REQUEST received.
-OPEN_WINDOW_REQUEST received.
-OPEN_WINDOW_REQUEST received.
-OPEN_WINDOW_REQUEST received.
-OPEN_WINDOW_REQUEST received.
-OPEN_WINDOW_REQUEST received.
-OPEN_WINDOW_REQUEST received.
-OPEN_WINDOW_REQUEST received.
-OPEN_WINDOW_REQUEST received.
-OPEN_WINDOW_REQUEST received.
-OPEN_WINDOW_REQUEST received.
-OPEN_WINDOW_REQUEST received.
-OPEN_WINDOW_REQUEST received.
-OPEN_WINDOW_REQUEST received.
-OPEN_WINDOW_REQUEST received.
-OPEN_WINDOW_REQUEST received.
-OPEN_WINDOW_REQUEST received.
-OPEN_WINDOW_REQUEST received.
-OPEN_WINDOW_REQUEST received.
-OPE
+CLOSE_WINDOW_REQUEST received.
