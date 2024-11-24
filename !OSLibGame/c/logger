@@ -1,0 +1,55 @@
+/******************************************************************************
+
+File        : logger.c
+
+Date        : Sunday 24th November 2024
+
+Author      : Gavin Cawley
+
+Description : Simple logger library.
+
+History     : 24/11/2024 - v1.00 
+
+******************************************************************************/
+                   
+#include <stdarg.h>
+
+#include "oslib/wimp.h"
+
+#include "logger.h"
+
+FILE *logfile;
+
+void initialiseLog(char *filename)
+{
+   logfile = fopen(filename, "w");
+}                                 
+
+void closeLog()
+{
+   fclose(logfile);
+}
+
+void lprintf(char *format, ...)
+{          
+   va_list ap;              
+
+   va_start(ap, format);
+                          
+   vfprintf(logfile, format, ap);                          
+}
+
+os_error* logError(os_error *e, char *cmd)
+{           
+   if (e != NULL)
+   {
+      lprintf("Error executing %s:\n   num = %d\n   msg = '%s'\n",  
+         cmd, e->errnum, e->errmess);                     
+
+      exit(EXIT_FAILURE);
+   }
+
+   return e;
+}
+
+/*****************************************************************************/

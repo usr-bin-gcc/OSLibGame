@@ -24,8 +24,7 @@ History     : 23/11/2024 - v1.00
 #include "oslib/colourtrans.h"
                   
 #include "main.h"
-
-FILE *logfile;    
+#include "logger.h"    
 
 /*****************************************************************************
 *                                                                            *
@@ -79,11 +78,7 @@ void updateGame(void *ws)
    state->x += state->dx;
    state->y += state->dy;
 
-   wimp_force_redraw(block->open.w, 0, 0, 640, +512);
-
-   fprintf(logfile, "updateGame called at time %d\n", 
-      os_read_monotonic_time());
-   fflush(logfile);    
+   wimp_force_redraw(block->open.w, 0, 0, 640, +512); 
 
    setTimer(4, updateGame, ws);   
 }
@@ -210,13 +205,10 @@ osspriteop_area* loadSpriteFile(const char *filename)
    
    fprintf(logfile, "loading sprites...\n"); 
    fflush(logfile);
+
+   fileswitch_object_type objType;
    
-   osfile_read_stamped_no_path(filename, 
-                               NULL, 
-                               NULL, 
-                               &size, 
-                               NULL, 
-                               &type);
+   LOG_ERROR(xosfile_read_stamped_no_path, filename, &objType, NULL, NULL, &size, NULL, &type);
    
    fprintf(logfile, "sprite file size = %d\n", size);
    fflush(logfile);
@@ -228,21 +220,13 @@ osspriteop_area* loadSpriteFile(const char *filename)
    area->size  = size;
    area->first = 16;
 
-   os_error *e = xosspriteop_load_sprite_file(osspriteop_USER_AREA,
-                                                  area,
-                                                  filename);
 
-   if (e != NULL)
-   {
-      fprintf(logfile, "xosspriteop_load_sprite_file failed\n"
-         "   errnum = %d: message = '%s'\n", e->errnum, e->errmess);
-         fflush(logfile);
-      free(area);
-   }          
+   LOG_ERROR(xosspriteop_load_sprite_file, osspriteop_USER_AREA, area, filename); 
+
 
    // determine more efficient sprite pointer ids                               
    
-   e = xosspriteop_select_sprite(osspriteop_USER_AREA, 
+   os_error *e = xosspriteop_select_sprite(osspriteop_USER_AREA, 
                                      area, 
                                      (osspriteop_id)"invader1",
                                      &invader1);
@@ -486,16 +470,9 @@ osbool update(wimp_event_no event, wimp_block* block)
        
 int main()
 {
-   logfile = fopen("<OSLibGame$Dir>.logfile", "w");
-        
-   if (logfile == NULL)
-   { 
-      perror("Error opening log file");
-      
-      return EXIT_FAILURE;
-   } 
+   initialiseLog("<OSLibGame$Dir>.logfile");
   
-   fprintf(logfile, "Starting application\n");
+   LPRINTF("Starting application '%s'\n", "OSLibGame");
 
    wimp_initialise(wimp_VERSION_RO3,"OSLibGame",NULL,NULL); 
                                       
@@ -509,13 +486,7 @@ int main()
    initialiseTimer();
    initialiseGame(&state);
            
-   os_error *err = xwimp_open_window(&block->open);
-                         
-   if (err != NULL)
-   {
-      fprintf(logfile, "msg = '%s'\n", err->errmess);
-      fflush(logfile);
-   }
+   LOG_ERROR(xwimp_open_window, &block->open);
 
    osbool quit = FALSE;
 
@@ -538,7 +509,7 @@ int main()
    
    wimp_close_down(0); 
 
-   fclose(logfile);
+   closeLog();
         
    return EXIT_SUCCESS;
 }                      

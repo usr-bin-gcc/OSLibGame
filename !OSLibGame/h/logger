@@ -1,0 +1,50 @@
+/******************************************************************************
+
+File        : logger.h
+
+Date        : Sunday 24th November 2024
+
+Author      : Gavin Cawley
+
+Description : Simple message logging library.
+
+History     : 24/11/2024 - v1.00 
+
+******************************************************************************/
+
+#ifndef LOGGER_H
+#define LOGGER_H
+     
+#include <stdio.h> 
+#include <stdlib.h>
+
+#include "oslib/os.h"
+              
+#define DEBUG_LOG 1
+
+#if DEBUG_LOG == 0   
+
+#define LPRINTF(format, ...) lprintf("on line %d of '%s' in '%s': " \
+                             format, __LINE__, __FILE__, __func__, __VA_ARGS__) 
+
+#else
+
+#define LPRINTF(format, ...) lprintf(format, __VA_ARGS__)
+
+#endif
+
+#define LOG_ERROR(CMD, ...) logError(CMD(__VA_ARGS__), #CMD)
+ 
+extern FILE *logfile;
+
+void initialiseLog(char *filename);
+
+void closeLog();
+
+void lprintf(char *format, ...);
+
+os_error* logError(os_error *e, char *cmd);
+
+#endif
+
+/*****************************************************************************/
