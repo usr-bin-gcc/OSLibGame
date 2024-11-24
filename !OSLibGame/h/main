@@ -1,0 +1,89 @@
+/******************************************************************************
+
+File        : main.h
+
+Date        : Sunday 24th November 2024
+
+Author      : Gavin Cawley
+
+Description : Sketching out some basic elements of a simple Desktop game 
+              implemented using OSLib.  This header file contains forward
+              declarations of functions in main.c, allowing main.c to be
+              structured in a more modular fashion.
+
+History     : 24/11/2024 - v1.00 
+
+******************************************************************************/
+          
+/*****************************************************************************
+*                                                                            *
+*                                 GAME LOGIC                                 *
+*                                                                            *
+*****************************************************************************/
+
+typedef struct 
+{                                       
+   osspriteop_header *sprite;
+
+   int x, y;   // coordinates of invader
+
+   int dx, dy;  // velocity of invader
+
+   int frame;
+}
+GameState;
+                                    
+extern GameState state;
+
+void initialiseGame(GameState *state);
+                
+void updateGame(void *ws);
+
+/*****************************************************************************
+*                                                                            *
+*                              ANIMATION TIMER                               *
+*                                                                            *
+*****************************************************************************/  
+
+void initialiseTimer();
+
+void setTimer(int cs, void (*callback)(void*), void *ws);
+
+void updateTimer();
+
+/*****************************************************************************
+*                                                                            *
+*                                   SPRITES                                  *
+*                                                                            *
+*****************************************************************************/
+
+extern osspriteop_area *area;
+
+extern osspriteop_header *invader1, *invader2;
+
+extern os_factors factors;
+
+extern osspriteop_trans_tab *transTab;
+
+osspriteop_area* loadSpriteFile(const char *filename);
+
+/*****************************************************************************
+*                                                                            *
+*                                 GAME WINDOW                                *
+*                                                                            *
+*****************************************************************************/
+
+extern wimp_window *window;
+extern wimp_block  *block;
+       
+wimp_window* createWindow();
+
+wimp_block* createWimpBlock(wimp_window* window);
+
+void redrawWindow(wimp_block *block);
+
+osbool update(wimp_event_no event, wimp_block* block);
+
+   
+
+/*****************************************************************************/

@@ -22,8 +22,111 @@ History     : 23/11/2024 - v1.00
 #include "oslib/osfile.h"
 #include "oslib/osspriteop.h"                    
 #include "oslib/colourtrans.h"
+                  
+#include "main.h"
 
-FILE *logfile;               
+FILE *logfile;    
+
+/*****************************************************************************
+*                                                                            *
+*                                 GAME LOGIC                                 *
+*                                                                            *
+*****************************************************************************/
+ 
+GameState state;
+       
+void initialiseGame(GameState *state)
+{
+   state->sprite = invader1;
+   state->x      = 320 << 8;
+   state->y      = 256 << 8;
+   state->dx     = 2 << 8;
+   state->dy     = 2 << 8;
+   state->frame  = 0;
+
+   setTimer(64, updateGame, (void*)state);
+}
+                                     
+void updateGame(void *ws)
+{                                                    
+   GameState* state = (GameState*)ws;
+    
+   state->frame++;              
+
+   if (state->frame%4 == 0)
+   {
+      state->sprite = state->sprite == invader1 ? invader2 : invader1; 
+   }
+
+   if ((state->x >> 8) >= 640 - 72)
+   {
+      state->dx = -(2 << 8);
+   }                        
+   else if ((state->x >> 8) < 0)
+   {
+      state->dx = +(2 << 8);
+   }  
+
+   if ((state->y >> 8) >= 512 - 68)
+   {
+      state->dy = -(2 << 8);
+   }                        
+   else if ((state->y >> 8) < 0)
+   {
+      state->dy = +(2 << 8);
+   } 
+
+   state->x += state->dx;
+   state->y += state->dy;
+
+   wimp_force_redraw(block->open.w, 0, 0, 640, +512);
+
+   fprintf(logfile, "updateGame called at time %d\n", 
+      os_read_monotonic_time());
+   fflush(logfile);    
+
+   setTimer(4, updateGame, ws);   
+}
+
+/*****************************************************************************
+*                                                                            *
+*                              ANIMATION TIMER                               *
+*                                                                            *
+*****************************************************************************/    
+os_t timer;
+
+void (*timerCallback)(void*);       
+
+void *timerWorkspace;
+
+void initialiseTimer()
+{         
+   timer          = 0;
+   timerCallback  = NULL;
+   timerWorkspace = NULL;
+}
+
+void setTimer(int cs, void (*callback)(void*), void *ws)
+{
+   timer          = os_read_monotonic_time() + cs;
+   timerCallback  = callback;
+   timerWorkspace = ws;   
+}
+
+void updateTimer()
+{
+   if (timer > 0)
+   {      
+      os_t time = os_read_monotonic_time();
+
+      if (time >= timer)
+      {
+         timer = 0;
+
+         timerCallback(timerWorkspace);
+      }
+   }
+}
 
 /*****************************************************************************
 *                                                                            *
@@ -70,16 +173,19 @@ void updateModeInfo()
    os_error *e = xos_read_vdu_variables((os_vdu_var_list*)modeInfo.numbers, 
                                         modeInfo.numbers);
 
-   fprintf(logfile, "VDU variables:\n"
-      "   xEigFactor = %d\n" 
-      "   yEigFactor = %d\n"
-      "   xWindLimit = %d\n"
-      "   yWindLimit = %d\n", 
-      modeInfo.info.xEigFactor, 
-      modeInfo.info.yEigFactor,
-      modeInfo.info.xWindLimit,
-      modeInfo.info.yWindLimit);
-   fflush(logfile);
+   if (e != NULL)
+   {
+      fprintf(logfile, "VDU variables:\n"
+         "   xEigFactor = %d\n" 
+         "   yEigFactor = %d\n"
+         "   xWindLimit = %d\n"
+         "   yWindLimit = %d\n", 
+         modeInfo.info.xEigFactor, 
+         modeInfo.info.yEigFactor,
+         modeInfo.info.xWindLimit,
+         modeInfo.info.yWindLimit);
+         fflush(logfile);
+   }
 }
 
 /*****************************************************************************
@@ -222,6 +328,9 @@ osspriteop_area* loadSpriteFile(const char *filename)
 *                                 GAME WINDOW                                *
 *                                                                            *
 *****************************************************************************/
+       
+wimp_window *window;
+wimp_block  *block;
 
 wimp_window* createWindow()
 {           
@@ -296,16 +405,15 @@ void redrawWindow(wimp_block *block)
       int x = draw.box.x0 - draw.xscroll;
       int y = draw.box.y1 - draw.yscroll; 
 
-
-      os_error *e = xosspriteop_put_sprite_scaled(osspriteop_NAME,
-                                                  area,
-                                                  (osspriteop_id)"invader1",
-                                                  x+320,
-                                                  y+256,
-                                                  os_ACTION_OVERWRITE |
-                                                  osspriteop_GIVEN_WIDE_ENTRIES | 0x8,
-                                                  &factors,
-                                                  transTab);
+      os_error *e = xosspriteop_put_sprite_scaled(osspriteop_PTR,
+                       area,
+                       (osspriteop_id)state.sprite,
+                       x + (state.x >> 8),
+                       y + (state.y >> 8),
+                       os_ACTION_OVERWRITE |
+                       osspriteop_GIVEN_WIDE_ENTRIES | 0x8,
+                       &factors,
+                       transTab);
 
       if (e != NULL)
       {
@@ -351,6 +459,7 @@ osbool update(wimp_event_no event, wimp_block* block)
       }
       case wimp_USER_MESSAGE:
       {
+         break;
       }
       case wimp_USER_MESSAGE_RECORDED:
       {
@@ -368,7 +477,13 @@ osbool update(wimp_event_no event, wimp_block* block)
 
    return FALSE;
 }
-
+       
+/*****************************************************************************
+*                                                                            *
+*                                MAIN FUNCTION                               *
+*                                                                            *
+*****************************************************************************/
+       
 int main()
 {
    logfile = fopen("<OSLibGame$Dir>.logfile", "w");
@@ -388,8 +503,11 @@ int main()
 
    area = loadSpriteFile("<OSLibGame$Dir>.sprites");
 
-   wimp_window *window = createWindow();
-   wimp_block  *block  = createWimpBlock(window);
+   window = createWindow();
+   block  = createWimpBlock(window);
+
+   initialiseTimer();
+   initialiseGame(&state);
            
    os_error *err = xwimp_open_window(&block->open);
                          
@@ -404,8 +522,15 @@ int main()
    while(!quit)
    {
       wimp_event_no event = wimp_poll(0, block, NULL);
-                
-      quit = update(event, block);
+                     
+      if (event == wimp_NULL_REASON_CODE)
+      {
+         updateTimer();
+      }
+      else
+      {  
+         quit = update(event, block);
+      }
    }
 
    free(window);
