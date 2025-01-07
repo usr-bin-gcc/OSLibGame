@@ -79,9 +79,40 @@ void updateGame(void *ws)
    state->x += state->dx;
    state->y += state->dy;
 
-   wimp_force_redraw(block->open.w, 0, 0, 640, +512); 
+   wimp_force_redraw(gameWindow, 0, 0, 640, +512); 
 
    setTimer(4, updateGame, ws);   
+}
+
+void processKeyPress(int keyCode)
+{
+   switch (keyCode)
+   {
+      case wimp_KEY_LEFT:
+      {                 
+         state.dx = -2 << 8;
+
+         break;
+      }
+      case wimp_KEY_RIGHT:
+      {                   
+         state.dx = +2 << 8;
+
+         break;
+      }
+      case wimp_KEY_UP:
+      {
+         state.dy = +2 << 8;
+
+         break;
+      }
+      case wimp_KEY_DOWN:
+      {
+         state.dy = -2 << 8;
+
+         break;
+      }
+   }         
 }
 
 /*****************************************************************************
@@ -209,7 +240,8 @@ osspriteop_area* loadSpriteFile(const char *filename)
 
    fileswitch_object_type objType;
    
-   LOG_ERROR(xosfile_read_stamped_no_path, filename, &objType, NULL, NULL, &size, NULL, &type);
+   LOG_ERROR(xosfile_read_stamped_no_path, filename, &objType, NULL, NULL, 
+                &size, NULL, &type);
    
    fprintf(logfile, "sprite file size = %d\n", size);
    fflush(logfile);
@@ -222,7 +254,8 @@ osspriteop_area* loadSpriteFile(const char *filename)
    area->first = 16;
 
 
-   LOG_ERROR(xosspriteop_load_sprite_file, osspriteop_USER_AREA, area, filename); 
+   LOG_ERROR(xosspriteop_load_sprite_file, osspriteop_USER_AREA, area, 
+                filename); 
 
 
    // determine more efficient sprite pointer ids                               
@@ -316,6 +349,7 @@ osspriteop_area* loadSpriteFile(const char *filename)
        
 wimp_window *window;
 wimp_block  *block;
+wimp_w       gameWindow;
 
 wimp_window* createWindow()
 {           
@@ -336,13 +370,16 @@ wimp_window* createWindow()
                         | wimp_WINDOW_VSCROLL 
                         | wimp_WINDOW_TOGGLE_ICON 
                         | wimp_WINDOW_SIZE_ICON 
-                        | wimp_WINDOW_NEW_FORMAT;
+                        | wimp_WINDOW_NEW_FORMAT
+                        | wimp_WINDOW_HAS_FOCUS
+                        | wimp_WINDOW_HOT_KEYS;
    window->title_fg     = wimp_COLOUR_BLACK;
    window->title_bg     = wimp_COLOUR_LIGHT_GREY;
    window->work_fg      = wimp_COLOUR_WHITE;
    window->work_bg      = wimp_COLOUR_BLACK; 
    window->scroll_outer = wimp_COLOUR_MID_LIGHT_GREY;
    window->scroll_inner = wimp_COLOUR_VERY_LIGHT_GREY;
+   window->highlight_bg = wimp_COLOUR_CREAM;
    window->extent.x0    = 0;
    window->extent.y0    = 0;
    window->extent.x1    = 640;
@@ -350,7 +387,7 @@ wimp_window* createWindow()
    window->title_flags  = wimp_ICON_TEXT 
                         | wimp_ICON_HCENTRED 
                         | wimp_ICON_VCENTRED;
-   window->work_flags   = wimp_BUTTON_CLICK << wimp_ICON_BUTTON_TYPE_SHIFT;
+   window->work_flags   = wimp_BUTTON_WRITABLE << wimp_ICON_BUTTON_TYPE_SHIFT;
    window->sprite_area  = 0;
    window->xmin         = 0;
    window->ymin         = 0;
@@ -369,7 +406,8 @@ wimp_block* createWimpBlock(wimp_window* window)
    block->open.visible = window->visible;
    block->open.xscroll = window->xscroll;
    block->open.yscroll = window->yscroll;
-   block->open.next    = window->next;         
+   block->open.next    = window->next;           
+   gameWindow          = block->open.w;
 
    return block;
 }
@@ -415,10 +453,26 @@ osbool update(wimp_event_no event, wimp_block* block)
 {
    switch(event)
    {
+      case wimp_MOUSE_CLICK:
+      {
+         fprintf(logfile, "MOUSE_CLICK received.\n"); 
+         fflush(logfile);
+
+         break;
+      }
+      case wimp_KEY_PRESSED:
+      {
+         fprintf(logfile, "KEY_PRESSED received (%#x).\n", block->key.c);
+         fflush(logfile);
+
+         processKeyPress(block->key.c);
+
+         break;
+      }
       case wimp_REDRAW_WINDOW_REQUEST:
       {
-         fprintf(logfile, "REDRAW_WINDOW_REQUEST received.\n"); 
-         fflush(logfile);
+         //fprintf(logfile, "REDRAW_WINDOW_REQUEST received.\n"); 
+         //fflush(logfile);
                 
          redrawWindow(block);
 

@@ -39,6 +39,8 @@ void initialiseGame(GameState *state);
                 
 void updateGame(void *ws);
 
+void processKeyPress(int keyCode);
+
 /*****************************************************************************
 *                                                                            *
 *                              ANIMATION TIMER                               *
@@ -75,6 +77,7 @@ osspriteop_area* loadSpriteFile(const char *filename);
 
 extern wimp_window *window;
 extern wimp_block  *block;
+extern wimp_w       gameWindow;
        
 wimp_window* createWindow();
 
