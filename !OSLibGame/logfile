@@ -1,30 +1,69 @@
 Starting application 'OSLibGame'
 loading sprites...
-sprite file size = 1460
+sprite file size = 1748
 colourtrans table size = 64
 finished loading sprites
-KEY_PRESSED received (0x18e).
-KEY_PRESSED received (0x18c).
-KEY_PRESSED received (0x18d).
-KEY_PRESSED received (0x18e).
-KEY_PRESSED received (0x18f).
-KEY_PRESSED received (0x18c).
-KEY_PRESSED received (0x18f).
-KEY_PRESSED received (0x18c).
-KEY_PRESSED received (0x18e).
-KEY_PRESSED received (0x18c).
-KEY_PRESSED received (0x18f).
-KEY_PRESSED received (0x18d).
-KEY_PRESSED received (0x18d).
-KEY_PRESSED received (0x18e).
-KEY_PRESSED received (0x18c).
-KEY_PRESSED received (0x18f).
-KEY_PRESSED received (0x18c).
-KEY_PRESSED received (0x18d).
-KEY_PRESSED received (0x18f).
-KEY_PRESSED received (0x18c).
-KEY_PRESSED received (0x18c).
-KEY_PRESSED received (0x18f).
-KEY_PRESSED received (0x18f).
-KEY_PRESSED received (0x18c).
-CLOSE_WINDOW_REQUEST received.
+OPEN_WINDOW_REQUEST received.
+OPEN_WINDOW_REQUEST received.
+OPEN_WINDOW_REQUEST received.
+OPEN_WINDOW_REQUEST received.
+OPEN_WINDOW_REQUEST received.
+OPEN_WINDOW_REQUEST received.
+OPEN_WINDOW_REQUEST received.
+OPEN_WINDOW_REQUEST received.
+OPEN_WINDOW_REQUEST received.
+OPEN_WINDOW_REQUEST received.
+OPEN_WINDOW_REQUEST received.
+OPEN_WINDOW_REQUEST received.
+OPEN_WINDOW_REQUEST received.
+OPEN_WINDOW_REQUEST received.
+OPEN_WINDOW_REQUEST received.
+OPEN_WINDOW_REQUEST received.
+OPEN_WINDOW_REQUEST received.
+OPEN_WINDOW_REQUEST received.
+OPEN_WINDOW_REQUEST received.
+OPEN_WINDOW_REQUEST received.
+OPEN_WINDOW_REQUEST received.
+OPEN_WINDOW_REQUEST received.
+OPEN_WINDOW_REQUEST received.
+OPEN_WINDOW_REQUEST received.
+OPEN_WINDOW_REQUEST received.
+OPEN_WINDOW_REQUEST received.
+OPEN_WINDOW_REQUEST received.
+OPEN_WINDOW_REQUEST received.
+OPEN_WINDOW_REQUEST received.
+OPEN_WINDOW_REQUEST received.
+OPEN_WINDOW_REQUEST received.
+OPEN_WINDOW_REQUEST received.
+OPEN_WINDOW_REQUEST received.
+OPEN_WINDOW_REQUEST received.
+OPEN_WINDOW_REQUEST received.
+OPEN_WINDOW_REQUEST received.
+OPEN_WINDOW_REQUEST received.
+OPEN_WINDOW_REQUEST received.
+OPEN_WINDOW_REQUEST received.
+OPEN_WINDOW_REQUEST received.
+OPEN_WINDOW_REQUEST received.
+OPEN_WINDOW_REQUEST received.
+OPEN_WINDOW_REQUEST received.
+OPEN_WINDOW_REQUEST received.
+OPEN_WINDOW_REQUEST received.
+OPEN_WINDOW_REQUEST received.
+OPEN_WINDOW_REQUEST received.
+OPEN_WINDOW_REQUEST received.
+OPEN_WINDOW_REQUEST received.
+OPEN_WINDOW_REQUEST received.
+OPEN_WINDOW_REQUEST received.
+OPEN_WINDOW_REQUEST received.
+OPEN_WINDOW_REQUEST received.
+OPEN_WINDOW_REQUEST received.
+OPEN_WINDOW_REQUEST received.
+OPEN_WINDOW_REQUEST received.
+OPEN_WINDOW_REQUEST received.
+OPEN_WINDOW_REQUEST received.
+OPEN_WINDOW_REQUEST received.
+OPEN_WINDOW_REQUEST received.
+OPEN_WINDOW_REQUEST received.
+OPEN_WINDOW_REQUEST received.
+OPEN_WINDOW_REQUEST received.
+OPEN_WINDOW_REQUEST received.

@@ -2,9 +2,9 @@
 
 File        : main.h
 
-Date        : Sunday 24th November 2024
+Date        : Thursday 5th March 2025
 
-Author      : Gavin Cawley
+Author      : Gavin and Cameron Cawley
 
 Description : Sketching out some basic elements of a simple Desktop game 
               implemented using OSLib.  This header file contains forward
@@ -12,6 +12,11 @@ Description : Sketching out some basic elements of a simple Desktop game
               structured in a more modular fashion.
 
 History     : 24/11/2024 - v1.00 
+              24/11/2024 - v1.10 Added animation using a timer
+              05/03/2025 - v1.20 Now uses xwimp_update_window for animation
+                                 and xwimp_redraw_window for handline redraw
+                                 events (with a common render routine).
+
 
 ******************************************************************************/
           
@@ -82,6 +87,8 @@ extern wimp_w       gameWindow;
 wimp_window* createWindow();
 
 wimp_block* createWimpBlock(wimp_window* window);
+
+void updateWindow(wimp_w window);
 
 void redrawWindow(wimp_block *block);
 

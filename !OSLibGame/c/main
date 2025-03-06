@@ -2,15 +2,18 @@
 
 File        : main.c
 
-Date        : Sunday 24th November 2024
+Date        : Thursday 5th March 2025
 
-Author      : Gavin Cawley
+Author      : Gavin and Cameron Cawley
 
 Description : Sketching out some basic elements of a simple Desktop game 
               implemented using OSLib.
 
 History     : 23/11/2024 - v1.00
-              24/11/2024 - v1.10 Added animation using a timer 
+              24/11/2024 - v1.10 Added animation using a timer
+              05/03/2025 - v1.20 Now uses xwimp_update_window for animation
+                                 and xwimp_redraw_window for handline redraw
+                                 events (with a common render routine).
 
 ******************************************************************************/
           
@@ -78,8 +81,8 @@ void updateGame(void *ws)
 
    state->x += state->dx;
    state->y += state->dy;
-
-   wimp_force_redraw(gameWindow, 0, 0, 640, +512); 
+     
+   updateWindow(block->redraw.w);
 
    setTimer(4, updateGame, ws);   
 }
@@ -253,10 +256,8 @@ osspriteop_area* loadSpriteFile(const char *filename)
    area->size  = size;
    area->first = 16;
 
-
    LOG_ERROR(xosspriteop_load_sprite_file, osspriteop_USER_AREA, area, 
                 filename); 
-
 
    // determine more efficient sprite pointer ids                               
    
@@ -297,7 +298,7 @@ osspriteop_area* loadSpriteFile(const char *filename)
                                        (os_mode)-1,   
                                        (os_palette*)-1,    
                                        NULL,
-                                       colourtrans_CURRENT_IF_ABSENT |
+                                       /* colourtrans_CURRENT_IF_ABSENT | */
                                        colourtrans_RETURN_WIDE_ENTRIES,
                                        NULL,
                                        NULL,
@@ -320,7 +321,7 @@ osspriteop_area* loadSpriteFile(const char *filename)
                                     (os_mode)-1,   
                                     (os_palette*)-1,   
                                     transTab,
-                                    colourtrans_CURRENT_IF_ABSENT |
+                                    /* colourtrans_CURRENT_IF_ABSENT | */
                                     colourtrans_RETURN_WIDE_ENTRIES,
                                     NULL,
                                     NULL,
@@ -412,21 +413,12 @@ wimp_block* createWimpBlock(wimp_window* window)
    return block;
 }
 
-void redrawWindow(wimp_block *block)
+void render(wimp_draw *draw, osbool more)
 {
-   wimp_draw draw;
-   
-   draw.w   = block->redraw.w;
-   draw.box = block->redraw.box;
-
-   int more;
-
-   xwimp_redraw_window(&draw, &more);
-
    while (more)
    {
-      int x = draw.box.x0 - draw.xscroll;
-      int y = draw.box.y1 - draw.yscroll; 
+      int x = draw->box.x0 - draw->xscroll;
+      int y = draw->box.y1 - draw->yscroll; 
 
       os_error *e = xosspriteop_put_sprite_scaled(osspriteop_PTR,
                        area,
@@ -434,7 +426,7 @@ void redrawWindow(wimp_block *block)
                        x + (state.x >> 8),
                        y + (state.y >> 8),
                        os_ACTION_OVERWRITE |
-                       osspriteop_GIVEN_WIDE_ENTRIES | 0x8,
+                       osspriteop_GIVEN_WIDE_ENTRIES | osspriteop_USE_MASK,
                        &factors,
                        transTab);
 
@@ -445,8 +437,36 @@ void redrawWindow(wimp_block *block)
          fflush(logfile);
       }
 
-      xwimp_get_rectangle(&draw, &more);
+      xwimp_get_rectangle(draw, &more);
    }  
+}
+
+void updateWindow(wimp_w window)
+{
+   wimp_draw draw;     
+
+   // only update window where invader appears
+   
+   draw.w      = window;
+   draw.box.x0 = (state.x >> 8);
+   draw.box.y0 = (state.y >> 8);
+   draw.box.x1 = draw.box.x0 + (38 << 1);
+   draw.box.y1 = draw.box.y0 + (19 << 2);
+            
+   int more;
+
+   xwimp_update_window(&draw, &more);
+
+   render(&draw, more);
+}
+
+void redrawWindow(wimp_block *block)
+{
+   int more;
+
+   xwimp_redraw_window(&block->redraw, &more);
+
+   render(&block->redraw, more);
 }
 
 osbool update(wimp_event_no event, wimp_block* block)
