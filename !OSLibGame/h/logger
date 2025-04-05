@@ -2,13 +2,14 @@
 
 File        : logger.h
 
-Date        : Sunday 24th November 2024
+Date        : Saturday 5th April 2025
 
 Author      : Gavin Cawley
 
-Description : Simple message logging library.
+Description : Simple logger library.
 
-History     : 24/11/2024 - v1.00 
+History     : 24/11/2024 - v1.00       
+              05/04/2025 - v1.01 - logfile now unbuffered0 
 
 ******************************************************************************/
 

@@ -2,7 +2,7 @@
 
 File        : main.c
 
-Date        : Thursday 5th March 2025
+Date        : Saturday 5th April 2025
 
 Author      : Gavin and Cameron Cawley
 
@@ -14,6 +14,9 @@ History     : 23/11/2024 - v1.00
               05/03/2025 - v1.20 Now uses xwimp_update_window for animation
                                  and xwimp_redraw_window for handline redraw
                                  events (with a common render routine).
+              05/04/2025 - v1.30 Experiments with sprite palettes and 
+                                 ColourTrans translation tables - now changes
+                                 colour when bouncing of the sides.
 
 ******************************************************************************/
           
@@ -29,6 +32,14 @@ History     : 23/11/2024 - v1.00
                   
 #include "main.h"
 #include "logger.h"    
+
+/*****************************************************************************
+*                                                                            *
+*                        UTILITY FUNCTIONS/MACROS                            *
+*                                                                            *
+*****************************************************************************/
+
+#define SWAP(type, x, y) {type _type_tmp = x; x = y; y = _type_tmp; }
 
 /*****************************************************************************
 *                                                                            *
@@ -64,19 +75,27 @@ void updateGame(void *ws)
    if ((state->x >> 8) >= 640 - 72)
    {
       state->dx = -(2 << 8);
+
+      transTab = transTab == transTab1 ? transTab2 : transTab1; 
    }                        
    else if ((state->x >> 8) < 0)
    {
       state->dx = +(2 << 8);
+
+      transTab = transTab == transTab1 ? transTab2 : transTab1; 
    }  
 
    if ((state->y >> 8) >= 512 - 68)
    {
       state->dy = -(2 << 8);
+
+      transTab = transTab == transTab1 ? transTab2 : transTab1; 
    }                        
    else if ((state->y >> 8) < 0)
    {
-      state->dy = +(2 << 8);
+      state->dy = +(2 << 8);                                    
+
+      transTab = transTab == transTab1 ? transTab2 : transTab1; 
    } 
 
    state->x += state->dx;
@@ -230,7 +249,7 @@ osspriteop_header *invader1, *invader2;
 
 os_factors factors;
 
-osspriteop_trans_tab *transTab;
+osspriteop_trans_tab *transTab, *transTab1, *transTab2;            
 
 osspriteop_area* loadSpriteFile(const char *filename)
 {                                                       
@@ -284,9 +303,9 @@ osspriteop_area* loadSpriteFile(const char *filename)
       fprintf(logfile, "selecting invader2 failed\n"
          "   errnum = %d: message = '%s'\n", e->errnum, e->errmess);
       fflush(logfile);
-   }
-                        
-   // set up factors and translation table
+   }  
+             
+   // set up factors and translation table #1
 
    factors.xmul = 1<<(modeInfo.info.xEigFactor-1);
    factors.ymul = 1<<(modeInfo.info.yEigFactor);
@@ -314,13 +333,13 @@ osspriteop_area* loadSpriteFile(const char *filename)
    fprintf(logfile, "colourtrans table size = %d\n", size);
    fflush(logfile); 
 
-   transTab = malloc(size);
+   transTab1 = malloc(size);
 
    e = xcolourtrans_generate_table_for_sprite(area, 
-                                    (osspriteop_id)"invader1",   
+                                    (osspriteop_id)"invader2",   
                                     (os_mode)-1,   
                                     (os_palette*)-1,   
-                                    transTab,
+                                    transTab1,
                                     /* colourtrans_CURRENT_IF_ABSENT | */
                                     colourtrans_RETURN_WIDE_ENTRIES,
                                     NULL,
@@ -333,7 +352,92 @@ osspriteop_area* loadSpriteFile(const char *filename)
          "   errnum = %d: message = '%s'\n", e->errnum, e->errmess);
       fflush(logfile);
    }
-   
+
+   // switch green and red for invader 2 
+
+   {                                       
+      int      size;
+      int     *palette;
+      os_mode  mode;
+
+      e = xosspriteop_read_palette_size(osspriteop_USER_AREA, 
+                                        area, 
+                                        (osspriteop_id)"invader2", 
+                                        &size, 
+                                        (os_sprite_palette**)&palette, 
+                                        &mode);
+
+      if (e != NULL)
+      {
+         fprintf(logfile, "getting invader2 palette size failed\n"
+            "   errnum = %d: message = '%s'\n", e->errnum, e->errmess);
+      }                               
+
+      fprintf(logfile, "invader 2 pallete size = %d\n", size);
+      fprintf(logfile, "pallete:\n");
+
+      for (int i = 0; i < 2*size; i++)
+      {
+         fprintf(logfile, "   %2d : %010X\n", i, palette[i]);
+      }           
+
+      // swap colours 10 (green) and 11 (red)
+
+      SWAP(int, palette[22], palette[20]);
+      SWAP(int, palette[23], palette[21]);
+   } 
+
+             
+   // set up factors and translation table #1
+
+   factors.xmul = 1<<(modeInfo.info.xEigFactor-1);
+   factors.ymul = 1<<(modeInfo.info.yEigFactor);
+   factors.xdiv = 1;
+   factors.ydiv = 1;         
+
+   e = xcolourtrans_generate_table_for_sprite(area,  
+                                       (osspriteop_id)"invader1",    
+                                       (os_mode)-1,   
+                                       (os_palette*)-1,    
+                                       NULL,
+                                       /* colourtrans_CURRENT_IF_ABSENT | */
+                                       colourtrans_RETURN_WIDE_ENTRIES,
+                                       NULL,
+                                       NULL,
+                                       &size);
+
+   if (e != NULL)
+   {
+      fprintf(logfile, "xcolourtrans_generate_table #1 failed\n"
+         "   errnum = %d: message = '%s'\n", e->errnum, e->errmess);
+      fflush(logfile);
+   }
+
+   fprintf(logfile, "colourtrans table size = %d\n", size);
+   fflush(logfile); 
+
+   transTab2 = malloc(size);
+
+   e = xcolourtrans_generate_table_for_sprite(area, 
+                                    (osspriteop_id)"invader2",   
+                                    (os_mode)-1,   
+                                    (os_palette*)-1,   
+                                    transTab2,
+                                    /* colourtrans_CURRENT_IF_ABSENT | */
+                                    colourtrans_RETURN_WIDE_ENTRIES,
+                                    NULL,
+                                    NULL,
+                                    &size);
+
+   if (e != NULL)
+   {
+      fprintf(logfile, "xcolourtrans_generate_table #2 failed\n"
+         "   errnum = %d: message = '%s'\n", e->errnum, e->errmess);
+      fflush(logfile);
+   }
+                                            
+   transTab = transTab1;
+
    // all done
 
    fprintf(logfile, "finished loading sprites\n");

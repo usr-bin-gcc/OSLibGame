@@ -2,7 +2,7 @@
 
 File        : main.h
 
-Date        : Thursday 5th March 2025
+Date        : Saturday 5th April 2025
 
 Author      : Gavin and Cameron Cawley
 
@@ -16,7 +16,9 @@ History     : 24/11/2024 - v1.00
               05/03/2025 - v1.20 Now uses xwimp_update_window for animation
                                  and xwimp_redraw_window for handline redraw
                                  events (with a common render routine).
-
+              05/04/2025 - v1.30 Experiments with sprite palettes and 
+                                 ColourTrans translation tables - now changes
+                                 colour when bouncing of the sides.
 
 ******************************************************************************/
           
@@ -70,7 +72,7 @@ extern osspriteop_header *invader1, *invader2;
 
 extern os_factors factors;
 
-extern osspriteop_trans_tab *transTab;
+osspriteop_trans_tab *transTab, *transTab1, *transTab2;            
 
 osspriteop_area* loadSpriteFile(const char *filename);
 
