@@ -17,6 +17,9 @@ History     : 23/11/2024 - v1.00
               05/04/2025 - v1.30 Experiments with sprite palettes and 
                                  ColourTrans translation tables - now changes
                                  colour when bouncing of the sides.
+              29/04/2025 - v1.31 Fixed bug introduced in v1.20 that caused a
+                                 crash if a key is pressed or there is a mouse
+                                 click on the window.
 
 ******************************************************************************/
           
@@ -101,7 +104,7 @@ void updateGame(void *ws)
    state->x += state->dx;
    state->y += state->dy;
      
-   updateWindow(block->redraw.w);
+   updateWindow(gameWindow);
 
    setTimer(4, updateGame, ws);   
 }
