@@ -2,7 +2,7 @@
 
 File        : main.c
 
-Date        : Saturday 5th April 2025
+Date        : Saturday 14th June 2025
 
 Author      : Gavin and Cameron Cawley
 
@@ -20,6 +20,7 @@ History     : 23/11/2024 - v1.00
               29/04/2025 - v1.31 Fixed bug introduced in v1.20 that caused a
                                  crash if a key is pressed or there is a mouse
                                  click on the window.
+              14/06/2025 - v1.40 Added diagnostic code to report FPS estimate
 
 ******************************************************************************/
           
@@ -64,8 +65,37 @@ void initialiseGame(GameState *state)
    setTimer(64, updateGame, (void*)state);
 }
                                      
+void updateFramesPerSecond(void)
+{                              
+   // estimate frames per second
+
+   static os_t oldTime = 0;
+   
+   static int frames = 0;
+
+   os_t newTime = os_read_monotonic_time();         
+
+   frames++;  
+
+   if (oldTime == 0)
+   {   
+      oldTime = os_read_monotonic_time();
+   }
+   else if (newTime > oldTime + 100)
+   {    
+      LPRINTF("FPS = %f\n", 100*frames/(newTime - (float)oldTime));      
+        
+      frames  = 0;
+      oldTime = newTime;
+   }
+}
+
 void updateGame(void *ws)
-{                                                    
+{                                       
+   updateFramesPerSecond();
+
+   // get on with updating the game...
+                
    GameState* state = (GameState*)ws;
     
    state->frame++;              
@@ -106,7 +136,7 @@ void updateGame(void *ws)
      
    updateWindow(gameWindow);
 
-   setTimer(4, updateGame, ws);   
+   setTimer(0, updateGame, ws);   
 }
 
 void processKeyPress(int keyCode)
