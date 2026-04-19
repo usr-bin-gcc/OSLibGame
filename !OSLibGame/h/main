@@ -35,7 +35,7 @@ History     : 23/11/2024 - v1.0.0
 
 typedef struct 
 {                                       
-   osspriteop_header *sprite;
+   int sprite;
 
    int x, y;    // coordinates of invader (fixed point)
 
@@ -75,11 +75,11 @@ void updateTimer();
 
 extern osspriteop_area *area;
 
-extern osspriteop_header *invader1, *invader2;
+extern osspriteop_header *spriteSheet;
 
 extern os_factors factors;
 
-osspriteop_trans_tab *transTab, *transTab1, *transTab2;            
+osspriteop_trans_tab *transTab;            
 
 osspriteop_area* loadSpriteFile(const char *filename);
 
